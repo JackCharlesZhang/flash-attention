@@ -45,7 +45,7 @@ defaults:
 jobs:
   build-wheel:
     runs-on: ${{ inputs.runs-on }}
-    name: Build ${{ inputs.is-fa3 == 'true' && 'FA3' || 'FA2' }} wheel (${{ inputs.release-version }}-${{ inputs.python-version }}-${{ inputs.cuda-version }}-${{ inputs.torch-version }}-${{ inputs.cxx11_abi }})
+    name: Build ${{ inputs.is-fa3 == 'true' && 'FlashAttention3' || 'FlashAttention' }} wheel (${{ inputs.release-version }}-${{ inputs.python-version }}-${{ inputs.cuda-version }}-${{ inputs.torch-version }}-${{ inputs.cxx11_abi }})
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -175,7 +175,6 @@ jobs:
           export FLASH_ATTENTION_FORCE_BUILD="TRUE"
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
 
-          # Change to hopper directory if building FA3
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
             cd hopper
           fi

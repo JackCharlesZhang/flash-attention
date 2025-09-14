@@ -11,7 +11,7 @@ on:
   create:
     tags:
       - v*
-      - fa3_*
+      - fa3_beta0
 
 jobs:
   setup_release:
@@ -25,10 +25,10 @@ jobs:
         id: extract_branch
         run: echo ::set-output name=branch::${GITHUB_REF#refs/tags/}
         shell: bash
-      - name: Check if FA3 release
+      - name: Check for FA3 release
         id: check_fa3
         run: |
-          if [[ "${GITHUB_REF#refs/tags/}" == fa3_* ]]; then
+          if [[ "${GITHUB_REF#refs/tags/}" == "fa3_beta0" ]]; then
             echo "::set-output name=is_fa3::true"
           else
             echo "::set-output name=is_fa3::false"
@@ -81,7 +81,7 @@ jobs:
 
   publish_package:
     name: Publish package
-    needs: [build_wheels, setup_release]
+    needs: [build_wheels]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
