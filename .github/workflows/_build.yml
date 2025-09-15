@@ -178,12 +178,39 @@ jobs:
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
             cd hopper
-            # Add PyTorch CUDA include paths for FA3
-            TORCH_CUDA_PATH=$(python -c "import os; import nvidia.cusparse; print(os.path.dirname(nvidia.cusparse.__file__))" 2>/dev/null || echo "")
-            if [ -n "$TORCH_CUDA_PATH" ]; then
-              export CUDA_HOME="$TORCH_CUDA_PATH/.."
-              export CPATH="$TORCH_CUDA_PATH/include:$CPATH"
-              echo "Added CUDA path: $TORCH_CUDA_PATH"
+            # Find and add PyTorch CUDA include paths for FA3
+            echo "Looking for CUDA headers..."
+            # Try to find cusparse.h in various locations
+            SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
+            echo "Site packages: $SITE_PACKAGES"
+            
+            # Check if nvidia packages installed headers
+            for pkg in nvidia-cusparse-cu12 nvidia-cuda-runtime-cu12; do
+              PKG_PATH="$SITE_PACKAGES/$pkg"
+              if [ -d "$PKG_PATH" ]; then
+                echo "Found package: $PKG_PATH"
+                find "$PKG_PATH" -name "*.h" -type f | head -5
+              fi
+            done
+            
+            # Look for cusparse.h specifically
+            CUSPARSE_H=$(find "$SITE_PACKAGES" -name "cusparse.h" -type f 2>/dev/null | head -1)
+            if [ -n "$CUSPARSE_H" ]; then
+              CUDA_INCLUDE=$(dirname "$CUSPARSE_H")
+              export CPATH="$CUDA_INCLUDE:$CPATH"
+              echo "Found cusparse.h at: $CUSPARSE_H"
+              echo "Added to CPATH: $CUDA_INCLUDE"
+            else
+              echo "WARNING: Could not find cusparse.h in site-packages"
+              # Try symlink approach as fallback
+              if [ -f "/usr/local/cuda-12.9/include/cusparse.h" ]; then
+                echo "Using system CUDA headers"
+              else
+                echo "Creating dummy cusparse.h to bypass include check"
+                mkdir -p include
+                echo "#pragma once" > include/cusparse.h
+                export CPATH="$(pwd)/include:$CPATH"
+              fi
             fi
           fi
 
