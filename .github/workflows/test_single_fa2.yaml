@@ -1,0 +1,19 @@
+# Test single FA2 build to debug timeout issues
+name: Test Single FA2 Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test_single_fa2:
+    name: Test FA2 Single Build
+    uses: ./.github/workflows/_build.yml
+    with:
+      runs-on: ubuntu-22.04
+      python-version: "3.12"
+      cuda-version: "12.9.1"
+      torch-version: "2.8.0"
+      cxx11_abi: "FALSE"
+      release-version: ${{ github.ref_name }}
+      upload-to-release: false
+      is-fa3: 'false'
