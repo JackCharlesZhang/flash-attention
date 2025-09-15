@@ -185,6 +185,12 @@ jobs:
             
             # Find all CUDA include directories from nvidia packages
             CUDA_INCLUDES=""
+            
+            # Debug: list all nvidia packages
+            echo "Available nvidia packages:"
+            ls -la "$SITE_PACKAGES/nvidia/" 2>/dev/null || echo "No nvidia directory found"
+            
+            # Look for include directories in nvidia packages
             for include_dir in $(find "$SITE_PACKAGES/nvidia" -name "include" -type d 2>/dev/null); do
               if [ -d "$include_dir" ] && [ "$(ls -A "$include_dir")" ]; then
                 echo "Found CUDA include directory: $include_dir"
@@ -194,7 +200,26 @@ jobs:
                   CUDA_INCLUDES="$CUDA_INCLUDES:$include_dir"
                 fi
                 # List some headers for debugging
-                ls "$include_dir"/*.h 2>/dev/null | head -5
+                find "$include_dir" -name "*.h" -type f 2>/dev/null | head -3
+              fi
+            done
+            
+            # Also search for specific headers we need
+            echo "Searching for specific CUDA headers..."
+            for header in cusparse.h cublas_v2.h; do
+              HEADER_PATH=$(find "$SITE_PACKAGES" -name "$header" -type f 2>/dev/null | head -1)
+              if [ -n "$HEADER_PATH" ]; then
+                HEADER_DIR=$(dirname "$HEADER_PATH")
+                echo "Found $header at: $HEADER_PATH"
+                if [[ ":$CUDA_INCLUDES:" != *":$HEADER_DIR:"* ]]; then
+                  if [ -z "$CUDA_INCLUDES" ]; then
+                    CUDA_INCLUDES="$HEADER_DIR"
+                  else
+                    CUDA_INCLUDES="$CUDA_INCLUDES:$HEADER_DIR"
+                  fi
+                fi
+              else
+                echo "WARNING: $header not found in site-packages"
               fi
             done
             
