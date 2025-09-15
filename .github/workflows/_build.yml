@@ -173,7 +173,7 @@ jobs:
           # FA3 has many more files, so we increase parallelism for it
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
-            export MAX_JOBS=4
+            export MAX_JOBS=2
           else
             export MAX_JOBS=$([ "$MATRIX_CUDA_VERSION" == "129" ] && echo 1 || echo 2)
           fi
