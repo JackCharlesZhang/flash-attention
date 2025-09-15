@@ -197,7 +197,7 @@ jobs:
             CUSPARSE_H=$(find "$SITE_PACKAGES" -name "cusparse.h" -type f 2>/dev/null | head -1)
             if [ -n "$CUSPARSE_H" ]; then
               CUDA_INCLUDE=$(dirname "$CUSPARSE_H")
-              export CPATH="$CUDA_INCLUDE:$CPATH"
+              export CPATH="$CUDA_INCLUDE${CPATH:+:$CPATH}"
               echo "Found cusparse.h at: $CUSPARSE_H"
               echo "Added to CPATH: $CUDA_INCLUDE"
             else
