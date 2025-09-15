@@ -177,8 +177,6 @@ jobs:
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
           
           # Disable features for faster testing builds
-          export FLASH_ATTENTION_DISABLE_VARLEN="TRUE"
-          export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
           export FLASH_ATTENTION_DISABLE_HDIM64="TRUE"
           export FLASH_ATTENTION_DISABLE_HDIM96="TRUE"
           export FLASH_ATTENTION_DISABLE_HDIM128="TRUE"
