@@ -175,21 +175,6 @@ jobs:
           export NVCC_THREADS=2
           export FLASH_ATTENTION_FORCE_BUILD="TRUE"
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
-          
-          # Disable only less critical features for faster testing builds
-          # Keep VARLEN and CLUSTER enabled as they may have dependencies
-          # export FLASH_ATTENTION_DISABLE_VARLEN="TRUE"
-          # export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
-          
-          # Disable less common head dimensions to reduce compile time
-          export FLASH_ATTENTION_DISABLE_HDIM64="TRUE"
-          export FLASH_ATTENTION_DISABLE_HDIM96="TRUE"
-          # Keep HDIM128 enabled as it's commonly used
-          export FLASH_ATTENTION_DISABLE_HDIM192="TRUE"
-          export FLASH_ATTENTION_DISABLE_HDIM256="TRUE"
-          
-          # Disable SM80 to focus on newer architectures only
-          export FLASH_ATTENTION_DISABLE_SM80="TRUE"
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
             cd hopper
