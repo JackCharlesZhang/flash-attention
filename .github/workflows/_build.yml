@@ -32,6 +32,11 @@ on:
         description: "Upload wheel to this release"
         required: false
         type: string
+      is-fa3:
+        description: "Build FA3 from hopper directory"
+        required: false
+        type: string
+        default: "false"
 
 defaults:
   run:
@@ -40,7 +45,7 @@ defaults:
 jobs:
   build-wheel:
     runs-on: ${{ inputs.runs-on }}
-    name: Build wheel (${{ inputs.release-version }}-${{ inputs.python-version }}-${{ inputs.cuda-version }}-${{ inputs.torch-version }}-${{ inputs.cxx11_abi }})
+    name: Build ${{ inputs.is-fa3 == 'true' && 'FlashAttention3' || 'FlashAttention' }} wheel (${{ inputs.release-version }}-${{ inputs.python-version }}-${{ inputs.cuda-version }}-${{ inputs.torch-version }}-${{ inputs.cxx11_abi }})
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,7 +90,8 @@ jobs:
           # default method is "local", and we're hitting some error with caching for CUDA 11.8 and 12.1
           # method: ${{ (inputs.cuda-version == '11.8.0' || inputs.cuda-version == '12.1.0') && 'network' || 'local' }}
           method: "network"
-          sub-packages: '["nvcc"]'
+          # Install full toolkit for FA3, minimal for FA2
+          sub-packages: ${{ inputs.is-fa3 == 'true' && '[]' || '["nvcc"]' }}
 
       - name: Install PyTorch ${{ inputs.torch-version }}+cu${{ inputs.cuda-version }}
         run: |
@@ -98,8 +104,8 @@ jobs:
           # see https://github.com/pytorch/pytorch/blob/main/RELEASE.md#release-compatibility-matrix
           # This code is ugly, maybe there's a better way to do this.
           export TORCH_CUDA_VERSION=$(python -c "from os import environ as env; \
-            minv = {'2.5': 118, '2.6': 118, '2.7': 118, '2.8': 126, '2.9': 126}[env['MATRIX_TORCH_VERSION']]; \
-            maxv = {'2.5': 124, '2.6': 126, '2.7': 128, '2.8': 129, '2.9': 130}[env['MATRIX_TORCH_VERSION']]; \
+            minv = {'2.4': 118, '2.5': 118, '2.6': 118, '2.7': 118, '2.8': 126, '2.9': 126}[env['MATRIX_TORCH_VERSION']]; \
+            maxv = {'2.4': 124, '2.5': 124, '2.6': 126, '2.7': 128, '2.8': 129, '2.9': 130}[env['MATRIX_TORCH_VERSION']]; \
             print(minv if int(env['MATRIX_CUDA_VERSION']) < 120 else maxv)" \
           )
           # detect if we're on ARM
@@ -170,6 +176,10 @@ jobs:
           export FLASH_ATTENTION_FORCE_BUILD="TRUE"
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
 
+          if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
+            cd hopper
+          fi
+
           # 5h timeout since GH allows max 6h and we want some buffer
           EXIT_CODE=0
           timeout 5h python setup.py bdist_wheel --dist-dir=dist || EXIT_CODE=$?
@@ -202,7 +212,11 @@ jobs:
 
       - name: Log Built Wheels
         run: |
-          ls dist
+          if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
+            ls hopper/dist
+          else
+            ls dist
+          fi
 
       - name: Get Release with tag
         id: get_current_release
@@ -212,6 +226,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set wheel path
+        id: set_wheel_path
+        run: |
+          if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
+            echo "wheel_path=./hopper/dist/${{env.wheel_name}}" >> $GITHUB_OUTPUT
+          else
+            echo "wheel_path=./dist/${{env.wheel_name}}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload Release Asset
         id: upload_release_asset
         if: inputs.upload-to-release
@@ -220,6 +243,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_current_release.outputs.upload_url }}
-          asset_path: ./dist/${{env.wheel_name}}
+          asset_path: ${{ steps.set_wheel_path.outputs.wheel_path }}
           asset_name: ${{env.wheel_name}}
           asset_content_type: application/*

@@ -11,6 +11,7 @@ on:
   create:
     tags:
       - v*
+      - fa3_beta0
 
 jobs:
   setup_release:
@@ -18,10 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-version: ${{ steps.extract_branch.outputs.branch }}
+      is-fa3: ${{ steps.check_fa3.outputs.is_fa3 }}
     steps:
       - name: Get the tag version
         id: extract_branch
         run: echo ::set-output name=branch::${GITHUB_REF#refs/tags/}
+        shell: bash
+      - name: Check for FA3 release
+        id: check_fa3
+        run: |
+          if [[ "${GITHUB_REF#refs/tags/}" == "fa3_beta0" ]]; then
+            echo "::set-output name=is_fa3::true"
+          else
+            echo "::set-output name=is_fa3::false"
+          fi
         shell: bash
       - name: Create Release
         id: create_release
@@ -66,6 +77,7 @@ jobs:
       cxx11_abi: ${{ matrix.cxx11_abi }}
       release-version: ${{ needs.setup_release.outputs.release-version }}
       upload-to-release: true
+      is-fa3: ${{ needs.setup_release.outputs.is-fa3 }}
 
   publish_package:
     name: Publish package
@@ -87,10 +99,19 @@ jobs:
         env:
           FLASH_ATTENTION_SKIP_CUDA_BUILD: "TRUE"
         run: |
-          python setup.py sdist --dist-dir=dist
+          if [[ "${{ needs.setup_release.outputs.is-fa3 }}" == "true" ]]; then
+            cd hopper
+            python setup.py sdist --dist-dir=dist
+          else
+            python setup.py sdist --dist-dir=dist
+          fi
       - name: Deploy
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          python -m twine upload dist/*
+          if [[ "${{ needs.setup_release.outputs.is-fa3 }}" == "true" ]]; then
+            python -m twine upload hopper/dist/*
+          else
+            python -m twine upload dist/*
+          fi
