@@ -177,7 +177,7 @@ jobs:
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
           
           # Disable features for faster testing builds
-          export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
+          # export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
           export FLASH_ATTENTION_DISABLE_SM80="TRUE"
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
@@ -248,7 +248,13 @@ jobs:
 
           # Run without timeout - let GitHub enforce its 6h limit
           EXIT_CODE=0
-          python setup.py bdist_wheel --dist-dir=dist || EXIT_CODE=$?
+          echo "=== Starting Python setup.py build ==="
+          python setup.py bdist_wheel --dist-dir=dist -v 2>&1 | tee build.log || EXIT_CODE=$?
+          echo "=== Build finished with exit code: $EXIT_CODE ==="
+          
+          # Show last 100 lines of build output for debugging
+          echo "=== Last 100 lines of build output ==="
+          tail -100 build.log || true
 
           if [ $EXIT_CODE -eq 0 ]; then
             tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ inputs.cxx11_abi }}
