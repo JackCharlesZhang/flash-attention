@@ -174,23 +174,6 @@ jobs:
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
             export MAX_JOBS=4
-            # Disable less common features for FA3 to speed up build
-            export FLASH_ATTENTION_DISABLE_BACKWARD="FALSE"  # Keep backward pass
-            export FLASH_ATTENTION_DISABLE_SPLIT="TRUE"      # Disable split
-            export FLASH_ATTENTION_DISABLE_PAGEDKV="TRUE"    # Disable paged KV
-            export FLASH_ATTENTION_DISABLE_APPENDKV="TRUE"   # Disable append KV
-            export FLASH_ATTENTION_DISABLE_LOCAL="TRUE"      # Disable local attention
-            export FLASH_ATTENTION_DISABLE_SOFTCAP="TRUE"    # Disable softcap
-            export FLASH_ATTENTION_DISABLE_PACKGQA="TRUE"    # Disable packed GQA
-            export FLASH_ATTENTION_DISABLE_FP16="FALSE"      # Keep fp16
-            export FLASH_ATTENTION_DISABLE_FP8="TRUE"        # Disable fp8 (less common)
-            export FLASH_ATTENTION_DISABLE_VARLEN="FALSE"    # Keep variable length
-            export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"    # Disable cluster
-            export FLASH_ATTENTION_DISABLE_HDIM64="TRUE"     # Disable hdim64 (less common)
-            export FLASH_ATTENTION_DISABLE_HDIM96="TRUE"     # Disable hdim96 (uncommon)
-            export FLASH_ATTENTION_DISABLE_HDIM128="FALSE"   # Keep hdim128 (common)
-            export FLASH_ATTENTION_DISABLE_HDIM192="TRUE"    # Disable hdim192 (less common)
-            export FLASH_ATTENTION_DISABLE_HDIM256="FALSE"   # Keep hdim256 (common)
           else
             export MAX_JOBS=$([ "$MATRIX_CUDA_VERSION" == "129" ] && echo 1 || echo 2)
           fi
