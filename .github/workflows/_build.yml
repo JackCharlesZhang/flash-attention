@@ -170,13 +170,8 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
           # Limit MAX_JOBS otherwise the github runner goes OOM
           # nvcc 11.8 can compile with 2 jobs, but nvcc 12.3 goes OOM
-          # FA3 has many more files, so we increase parallelism for it
-
-          if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
-            export MAX_JOBS=2
-          else
-            export MAX_JOBS=$([ "$MATRIX_CUDA_VERSION" == "129" ] && echo 1 || echo 2)
-          fi
+          
+          export MAX_JOBS=$([ "$MATRIX_CUDA_VERSION" == "129" ] && echo 1 || echo 2)
           export NVCC_THREADS=2
           export FLASH_ATTENTION_FORCE_BUILD="TRUE"
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
