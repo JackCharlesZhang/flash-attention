@@ -178,6 +178,13 @@ jobs:
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
             cd hopper
+            # Add PyTorch CUDA include paths for FA3
+            TORCH_CUDA_PATH=$(python -c "import os; import nvidia.cusparse; print(os.path.dirname(nvidia.cusparse.__file__))" 2>/dev/null || echo "")
+            if [ -n "$TORCH_CUDA_PATH" ]; then
+              export CUDA_HOME="$TORCH_CUDA_PATH/.."
+              export CPATH="$TORCH_CUDA_PATH/include:$CPATH"
+              echo "Added CUDA path: $TORCH_CUDA_PATH"
+            fi
           fi
 
           # 5h timeout since GH allows max 6h and we want some buffer
