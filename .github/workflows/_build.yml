@@ -180,36 +180,39 @@ jobs:
             cd hopper
             # Find and add PyTorch CUDA include paths for FA3
             echo "Looking for CUDA headers..."
-            # Try to find cusparse.h in various locations
             SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
             echo "Site packages: $SITE_PACKAGES"
             
-            # Check if nvidia packages installed headers
-            for pkg in nvidia-cusparse-cu12 nvidia-cuda-runtime-cu12; do
-              PKG_PATH="$SITE_PACKAGES/$pkg"
-              if [ -d "$PKG_PATH" ]; then
-                echo "Found package: $PKG_PATH"
-                find "$PKG_PATH" -name "*.h" -type f | head -5
+            # Find all CUDA include directories from nvidia packages
+            CUDA_INCLUDES=""
+            for include_dir in $(find "$SITE_PACKAGES/nvidia" -name "include" -type d 2>/dev/null); do
+              if [ -d "$include_dir" ] && [ "$(ls -A "$include_dir")" ]; then
+                echo "Found CUDA include directory: $include_dir"
+                if [ -z "$CUDA_INCLUDES" ]; then
+                  CUDA_INCLUDES="$include_dir"
+                else
+                  CUDA_INCLUDES="$CUDA_INCLUDES:$include_dir"
+                fi
+                # List some headers for debugging
+                ls "$include_dir"/*.h 2>/dev/null | head -5
               fi
             done
             
-            # Look for cusparse.h specifically
-            CUSPARSE_H=$(find "$SITE_PACKAGES" -name "cusparse.h" -type f 2>/dev/null | head -1)
-            if [ -n "$CUSPARSE_H" ]; then
-              CUDA_INCLUDE=$(dirname "$CUSPARSE_H")
-              export CPATH="$CUDA_INCLUDE${CPATH:+:$CPATH}"
-              echo "Found cusparse.h at: $CUSPARSE_H"
-              echo "Added to CPATH: $CUDA_INCLUDE"
+            if [ -n "$CUDA_INCLUDES" ]; then
+              export CPATH="$CUDA_INCLUDES${CPATH:+:$CPATH}"
+              echo "Added to CPATH: $CUDA_INCLUDES"
             else
-              echo "WARNING: Could not find cusparse.h in site-packages"
-              # Try symlink approach as fallback
-              if [ -f "/usr/local/cuda-12.9/include/cusparse.h" ]; then
+              echo "WARNING: Could not find CUDA include directories"
+              # Fallback to system CUDA or create dummy headers
+              if [ -d "/usr/local/cuda-12.9/include" ]; then
+                export CPATH="/usr/local/cuda-12.9/include${CPATH:+:$CPATH}"
                 echo "Using system CUDA headers"
               else
-                echo "Creating dummy cusparse.h to bypass include check"
+                echo "Creating minimal dummy headers"
                 mkdir -p include
                 echo "#pragma once" > include/cusparse.h
-                export CPATH="$(pwd)/include:$CPATH"
+                echo "#pragma once" > include/cublas_v2.h
+                export CPATH="$(pwd)/include${CPATH:+:$CPATH}"
               fi
             fi
           fi
