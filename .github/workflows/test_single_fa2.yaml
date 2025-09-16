@@ -7,7 +7,7 @@ on:
 jobs:
   test_single_fa2:
     name: Test FA2 Single Build
-    uses: ./.github/workflows/_build.yml
+    uses: ./.github/workflows/_build_fa2.yaml
     with:
       runs-on: ubuntu-22.04
       python-version: "3.12"
@@ -16,4 +16,3 @@ jobs:
       cxx11_abi: "FALSE"
       release-version: ${{ github.ref_name }}
       upload-to-release: false
-      is-fa3: 'false'
