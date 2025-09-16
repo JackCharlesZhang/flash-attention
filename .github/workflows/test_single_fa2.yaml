@@ -11,7 +11,7 @@ jobs:
     with:
       runs-on: ubuntu-22.04
       python-version: "3.12"
-      cuda-version: "12.8"
+      cuda-version: "12.8.0"
       torch-version: "2.8.0"
       cxx11-abi: TRUE
       release-version: ${{ github.ref_name }}
