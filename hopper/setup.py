@@ -550,6 +550,26 @@ if not SKIP_CUDA_BUILD:
     else:
         flash_api_source = "flash_api.cpp"
 
+    # Debug logging
+    print(f"DEBUG: DISABLE_SM8x = {DISABLE_SM8x}")
+    print(f"DEBUG: DISABLE_SOFTCAP = {DISABLE_SOFTCAP}")
+    print(f"DEBUG: sources_fwd_sm80 count = {len(sources_fwd_sm80)}")
+    print(f"DEBUG: sources_fwd_sm90 count = {len(sources_fwd_sm90)}")
+    print(f"DEBUG: sources_bwd_sm80 count = {len(sources_bwd_sm80)}")
+    print(f"DEBUG: sources_bwd_sm90 count = {len(sources_bwd_sm90)}")
+    
+    # Check if files exist
+    missing_files = []
+    all_source_files = sources_fwd_sm80 + sources_fwd_sm90 + sources_bwd_sm80 + sources_bwd_sm90
+    for f in all_source_files[:10]:  # Check first 10 files
+        if not os.path.exists(f):
+            missing_files.append(f)
+    
+    if missing_files:
+        print(f"WARNING: Missing files: {missing_files}")
+    else:
+        print("DEBUG: First 10 files exist")
+    
     sources = (
         [flash_api_source]
         + (sources_fwd_sm80 if not DISABLE_SM8x else []) + sources_fwd_sm90
@@ -572,6 +592,7 @@ if not SKIP_CUDA_BUILD:
         "-DCUTLASS_ENABLE_GDC_FOR_SM90",  # For PDL
         "-DCUTLASS_DEBUG_TRACE_LEVEL=0",  # Can toggle for debugging
         "-DNDEBUG",  # Important, otherwise performance is severely impacted
+        "-v",  # Verbose compilation to see which files are being compiled
     ]
     if get_platform() == "win_amd64":
         nvcc_flags.extend(
