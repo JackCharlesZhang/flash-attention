@@ -504,25 +504,37 @@ if not SKIP_CUDA_BUILD:
     SOFTCAP = [""] + (["_softcap"] if not DISABLE_SOFTCAP else [])
     SOFTCAP_ALL = [""] if DISABLE_SOFTCAP else ["_softcapall"]
     PACKGQA = [""] + (["_packgqa"] if not DISABLE_PACKGQA else [])
-    # We already always hard-code PackGQA=true for Sm8x
-    sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}_sm80.cu"
-                        for hdim, dtype, split, paged, softcap in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV, SOFTCAP_ALL)]
-    # We already always hard-code PackGQA=true for Sm9x if PagedKV or Split
-    sources_fwd_sm90 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
-                        for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
-                        if not (packgqa and (paged or split))]
-    if not DISABLE_HDIMDIFF64:
-        sources_fwd_sm90 += [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
-                             for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF64_FWD, HALF_DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+    # SM80: batch_softcap already handles these with softcapall files
+    sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}_softcapall_sm80.cu"
+                        for hdim, dtype, split, paged in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV)] if not DISABLE_SOFTCAP else []
+    if DISABLE_SOFTCAP:
+        # If softcap is disabled, use individual kernel files
+        sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}_sm80.cu"
+                            for hdim, dtype, split, paged in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV)]
+    
+    # SM90: Use batch files (hdimall for same hdim/hdim_v, hdimdiff for different)
+    sources_fwd_sm90 = []
+    # Batch files for same hdim and hdim_v
+    sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimall_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+                         for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+                         if not (packgqa and (paged or split))]
+    
+    # Batch files for different hdim and hdim_v (only if enabled)
+    has_hdimdiff = not DISABLE_HDIMDIFF64 or not DISABLE_HDIMDIFF192
+    if has_hdimdiff:
+        sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimdiff_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+                             for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                              if not (packgqa and (paged or split))]
-    if not DISABLE_HDIMDIFF192:
-        sources_fwd_sm90 += [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
-                            for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF192_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
-                            if not (packgqa and (paged or split))]
+    
+    # Backward: SM80 uses individual files, SM90 uses softcapall batch files
     sources_bwd_sm80 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm80.cu"
                         for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP)]
-    sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm90.cu"
-                        for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP_ALL)]
+    sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}_softcapall_sm90.cu"
+                        for hdim, dtype in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD)] if not DISABLE_SOFTCAP else []
+    if DISABLE_SOFTCAP:
+        # If softcap is disabled, use individual kernel files
+        sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}_sm90.cu"
+                            for hdim, dtype in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD)]
     if DISABLE_BACKWARD:
         sources_bwd_sm90 = []
         sources_bwd_sm80 = []
