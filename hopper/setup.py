@@ -531,11 +531,16 @@ if not SKIP_CUDA_BUILD:
                              if not (packgqa and (paged or split))]
     
     # Backward: SM80 uses individual files, SM90 uses softcapall batch files
-    sources_bwd_sm80 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm80.cu"
-                        for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP)]
-    sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}_softcapall_sm90.cu"
-                        for hdim, dtype in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD)] if not DISABLE_SOFTCAP else []
-    if DISABLE_SOFTCAP:
+    if DISABLE_SM8x:
+        sources_bwd_sm80 = []
+    else:
+        sources_bwd_sm80 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm80.cu"
+                            for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP)]
+    
+    if not DISABLE_SOFTCAP:
+        sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}_softcapall_sm90.cu"
+                            for hdim, dtype in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD)]
+    else:
         # If softcap is disabled, use individual kernel files
         sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}_sm90.cu"
                             for hdim, dtype in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD)]
