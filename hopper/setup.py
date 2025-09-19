@@ -505,10 +505,14 @@ if not SKIP_CUDA_BUILD:
     SOFTCAP_ALL = [""] if DISABLE_SOFTCAP else ["_softcapall"]
     PACKGQA = [""] + (["_packgqa"] if not DISABLE_PACKGQA else [])
     # SM80: batch_softcap already handles these with softcapall files
-    sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}_softcapall_sm80.cu"
-                        for hdim, dtype, split, paged in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV)] if not DISABLE_SOFTCAP else []
-    if DISABLE_SOFTCAP:
-        # If softcap is disabled, use individual kernel files
+    # SM80: Use softcapall batch files for SM80 (only if SM80 not disabled)
+    if DISABLE_SM8x:
+        sources_fwd_sm80 = []
+    elif not DISABLE_SOFTCAP:
+        sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}_softcapall_sm80.cu"
+                            for hdim, dtype, split, paged in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV)]
+    else:
+        # Fallback to individual files if softcap disabled but SM80 enabled
         sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}_sm80.cu"
                             for hdim, dtype, split, paged in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV)]
     
