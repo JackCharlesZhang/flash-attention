@@ -15,7 +15,10 @@ def test_setup_sources():
         setup_content = f.read()
 
     # Execute just the part before setup() call to get the sources
-    setup_globals = {}
+    setup_globals = {
+        '__file__': 'setup.py',  # Add missing __file__
+        '__name__': '__main__'
+    }
     exec(setup_content.split('setup(')[0], setup_globals)
     
     # Extract variables from the executed setup code
