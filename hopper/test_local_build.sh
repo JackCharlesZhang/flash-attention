@@ -13,7 +13,6 @@ export FLASH_ATTENTION_FORCE_BUILD="TRUE"
 export FLASH_ATTENTION_FORCE_CXX11_ABI="FALSE"  # Default value
 
 # Disable features for faster testing builds (same as GitHub)
-export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
 export FLASH_ATTENTION_DISABLE_SM80="TRUE"
 
 echo "Environment variables set:"
