@@ -177,7 +177,7 @@ jobs:
           export FLASH_ATTENTION_FORCE_CXX11_ABI=${{ inputs.cxx11_abi }}
           
           # Disable features for faster testing builds
-          export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
+          # export FLASH_ATTENTION_DISABLE_CLUSTER="TRUE"
           export FLASH_ATTENTION_DISABLE_SM80="TRUE"
 
           if [[ "${{ inputs.is-fa3 }}" == "true" ]]; then
