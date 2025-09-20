@@ -502,8 +502,6 @@ if not SKIP_CUDA_BUILD:
     SOFTCAP = [""] + (["_softcap"] if not DISABLE_SOFTCAP else [])
     SOFTCAP_ALL = [""] if DISABLE_SOFTCAP else ["_softcapall"]
     PACKGQA = [""] + (["_packgqa"] if not DISABLE_PACKGQA else [])
-
-    sources_fwd_sm90 = []
    
     sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimall_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                     for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
