@@ -531,6 +531,9 @@ if not SKIP_CUDA_BUILD:
                             for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF192_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                             if not (packgqa and (paged or split))]
 
+    print("DISABLE_HDIMDIFF64: ", DISABLE_HDIMDIFF64)
+    print("DISABLE_HDIMDIFF192: ", DISABLE_HDIMDIFF192)
+
     sources_bwd_sm80 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm80.cu"
                         for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP)]
 
