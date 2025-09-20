@@ -506,15 +506,15 @@ if not SKIP_CUDA_BUILD:
     sources_fwd_sm90 = []
     print("HERE 1")
    
-    sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimall_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
-                    for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
-                    if not (packgqa and (paged or split))]
+    # sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimall_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+    #                 for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+    #                 if not (packgqa and (paged or split))]
 
-    print("HERE 2")
+    # print("HERE 2")
 
-    sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimdiff_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
-                    for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
-                    if not (packgqa and (paged or split))]
+    # sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimdiff_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+    #                 for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+    #                 if not (packgqa and (paged or split))]
 
     print("HERE 3")
 
