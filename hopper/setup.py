@@ -504,17 +504,25 @@ if not SKIP_CUDA_BUILD:
     PACKGQA = [""] + (["_packgqa"] if not DISABLE_PACKGQA else [])
 
     sources_fwd_sm90 = []
+    print("HERE 1")
    
     sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimall_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                     for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                     if not (packgqa and (paged or split))]
 
+    print("HERE 2")
+
     sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimdiff_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                     for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                     if not (packgqa and (paged or split))]
 
+    print("HERE 3")
+
     sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm90.cu"
                         for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP_ALL)]
+
+    print("HERE 4")
+
     if DISABLE_BACKWARD:
         sources_bwd_sm90 = []
     
@@ -535,7 +543,7 @@ if not SKIP_CUDA_BUILD:
         + sources_bwd_sm90
     )
 
-    print("Length of sources: ", len(sources))
+    
     if not DISABLE_SPLIT:
         sources += ["flash_fwd_combine.cu"]
     sources += ["flash_prepare_scheduler.cu"]
