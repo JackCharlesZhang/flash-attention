@@ -523,13 +523,18 @@ if not SKIP_CUDA_BUILD:
                         for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                         if not (packgqa and (paged or split))]
     if not DISABLE_HDIMDIFF64:
-        sources_fwd_sm90 += [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+        x = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                                 for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF64_FWD, HALF_DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                                 if not (packgqa and (paged or split))]
+
+        print("HDIMDIFF64: ", x)                       
+        sources_fwd_sm90 += x
     if not DISABLE_HDIMDIFF192:
-        sources_fwd_sm90 += [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+        y = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                             for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF192_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                             if not (packgqa and (paged or split))]
+        print("HDIMDIFF192: ", y)
+        sources_fwd_sm90 += y
 
     print("DISABLE_HDIMDIFF64: ", DISABLE_HDIMDIFF64)
     print("DISABLE_HDIMDIFF192: ", DISABLE_HDIMDIFF192)
