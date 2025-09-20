@@ -1,5 +1,3 @@
-# Copyright (c) 2024, Jay Shah, Ganesh Bikshandi, Ying Zhang, Vijay Thakkar, Pradeep Ramani, Tri Dao.
-
 import sys
 import warnings
 import os
@@ -504,28 +502,43 @@ if not SKIP_CUDA_BUILD:
     SOFTCAP = [""] + (["_softcap"] if not DISABLE_SOFTCAP else [])
     SOFTCAP_ALL = [""] if DISABLE_SOFTCAP else ["_softcapall"]
     PACKGQA = [""] + (["_packgqa"] if not DISABLE_PACKGQA else [])
-    # We already always hard-code PackGQA=true for Sm8x
+
+    sources_fwd_sm90 = []
+   
+    # sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimall_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+    #                 for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+    #                 if not (packgqa and (paged or split))]
+
+    # print("HERE 2")
+
+    # sources_fwd_sm90 += [f"instantiations/flash_fwd_hdimdiff_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
+    #                 for dtype, split, paged, softcap, packgqa in itertools.product(DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+    #                 if not (packgqa and (paged or split))]
+
     sources_fwd_sm80 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}_sm80.cu"
                         for hdim, dtype, split, paged, softcap in itertools.product(HEAD_DIMENSIONS_FWD_SM80, DTYPE_FWD_SM80, SPLIT, PAGEDKV, SOFTCAP_ALL)]
-    # We already always hard-code PackGQA=true for Sm9x if PagedKV or Split
+
+    
     sources_fwd_sm90 = [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                         for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                         if not (packgqa and (paged or split))]
     if not DISABLE_HDIMDIFF64:
         sources_fwd_sm90 += [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
-                             for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF64_FWD, HALF_DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
-                             if not (packgqa and (paged or split))]
+                                for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF64_FWD, HALF_DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
+                                if not (packgqa and (paged or split))]
     if not DISABLE_HDIMDIFF192:
         sources_fwd_sm90 += [f"instantiations/flash_fwd_hdim{hdim}_{dtype}{paged}{split}{softcap}{packgqa}_sm90.cu"
                             for hdim, dtype, split, paged, softcap, packgqa in itertools.product(HEAD_DIMENSIONS_DIFF192_FWD, DTYPE_FWD_SM90, SPLIT, PAGEDKV, SOFTCAP, PACKGQA)
                             if not (packgqa and (paged or split))]
+
     sources_bwd_sm80 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm80.cu"
                         for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP)]
+
     sources_bwd_sm90 = [f"instantiations/flash_bwd_hdim{hdim}_{dtype}{softcap}_sm90.cu"
                         for hdim, dtype, softcap in itertools.product(HEAD_DIMENSIONS_BWD, DTYPE_BWD, SOFTCAP_ALL)]
+
     if DISABLE_BACKWARD:
         sources_bwd_sm90 = []
-        sources_bwd_sm80 = []
     
     # Choose between flash_api.cpp and flash_api_stable.cpp based on torch version
     torch_version = parse(torch.__version__)
@@ -538,11 +551,19 @@ if not SKIP_CUDA_BUILD:
     else:
         flash_api_source = "flash_api.cpp"
 
+    # sources = (
+    #     [flash_api_source]
+    #      + sources_fwd_sm90
+    #     + sources_bwd_sm90
+    # )
+
     sources = (
         [flash_api_source]
         + (sources_fwd_sm80 if not DISABLE_SM8x else []) + sources_fwd_sm90
         + (sources_bwd_sm80 if not DISABLE_SM8x else []) + sources_bwd_sm90
     )
+
+    
     if not DISABLE_SPLIT:
         sources += ["flash_fwd_combine.cu"]
     sources += ["flash_prepare_scheduler.cu"]
