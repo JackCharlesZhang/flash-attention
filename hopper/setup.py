@@ -376,7 +376,7 @@ def nvcc_threads_args():
 
 
 # NVIDIA_TOOLCHAIN_VERSION = {"nvcc": "12.3.107"}
-NVIDIA_TOOLCHAIN_VERSION = {"nvcc": "12.6.85", "ptxas": "12.8.93"}
+NVIDIA_TOOLCHAIN_VERSION = {"nvcc": "12.6.85", "ptxas": "12.9.151"}
 
 exe_extension = sysconfig.get_config_var("EXE")
 
@@ -394,14 +394,23 @@ if not SKIP_CUDA_BUILD:
     TORCH_MINOR = int(torch.__version__.split(".")[1])
 
     check_if_cuda_home_none(PACKAGE_NAME)
-    _, bare_metal_version = get_cuda_bare_metal_version(CUDA_HOME)
+    raw_output, bare_metal_version = get_cuda_bare_metal_version(CUDA_HOME)
     if bare_metal_version < Version("12.3"):
         raise RuntimeError("FlashAttention-3 is only supported on CUDA 12.3 and above")
 
-    # ptxas 12.8 gives the best perf currently
-    # We want to use the nvcc front end from 12.6 however, since if we use nvcc 12.8
-    # Cutlass 3.8 will expect the new data types in cuda.h from CTK 12.8, which we don't have.
-    if bare_metal_version != Version("12.8"):
+    print(f"\n{'='*60}")
+    print(f"CUDA version check:")
+    print(f"System CUDA version: {bare_metal_version}")
+    print(f"CUDA_HOME: {CUDA_HOME}")
+    
+    # ptxas 12.8 or 12.9 gives the best perf currently
+    # We want to use the nvcc front end from 12.6 however, since if we use nvcc 12.8/12.9
+    # Cutlass 3.8 will expect the new data types in cuda.h from CTK 12.8/12.9, which we don't have.
+    if bare_metal_version != Version("12.8") and bare_metal_version != Version("12.9"):
+        print(f"System CUDA {bare_metal_version} is not 12.8 or 12.9")
+        print(f"Will download: nvcc {NVIDIA_TOOLCHAIN_VERSION['nvcc']} and ptxas {NVIDIA_TOOLCHAIN_VERSION['ptxas']}")
+        print(f"{'='*60}\n")
+        
         download_and_copy(
             name="nvcc",
             src_func=lambda system, arch, version: f"cuda_nvcc-{system}-{arch}-{version}-archive/bin",
@@ -435,6 +444,9 @@ if not SKIP_CUDA_BUILD:
         os.environ["PYTORCH_NVCC"] = nvcc_path_new
         # Make nvcc executable, sometimes after the copy it loses its permissions
         os.chmod(nvcc_path_new, os.stat(nvcc_path_new).st_mode | stat.S_IEXEC)
+    else:
+        print(f"Using system CUDA {bare_metal_version} (no additional downloads needed)")
+        print(f"{'='*60}\n")
 
     cc_flag = []
     cc_flag.append("-gencode")
