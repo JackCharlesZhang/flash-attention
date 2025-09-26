@@ -390,7 +390,7 @@ subprocess.run(["git", "submodule", "update", "--init", "../csrc/cutlass"])
 
 if not SKIP_CUDA_BUILD:
     print("\n\ntorch.__version__  = {}\n\n".format(torch.__version__))
-    TORCH_MAJOR = int(torch.__version__``.split(".")[0])
+    TORCH_MAJOR = int(torch.__version__.split(".")[0])
     TORCH_MINOR = int(torch.__version__.split(".")[1])
 
     check_if_cuda_home_none(PACKAGE_NAME)
